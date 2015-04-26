@@ -16,10 +16,12 @@ public class Player {
     int xc;
     int yc;
 
+
     public Player(Panel panel, int x, int y) {
         this.x = x;
         this.y = y;
         this.panel = panel;
+        
     }
 
     public void move() {

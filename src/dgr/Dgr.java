@@ -44,8 +44,8 @@ public class Dgr extends JFrame {
     public void runGame() {
 
         long initialTime = System.nanoTime();
-        final double timeU = 1000000000 / 20;
-        final double timeF = 1000000000 / 20;
+        final double timeU = 1000000000 / 10;
+        final double timeF = 1000000000 / 10;
         double deltaU = 0, deltaF = 0;
         int frames = 0, ticks = 0;
         long timer = System.currentTimeMillis();

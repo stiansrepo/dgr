@@ -59,8 +59,8 @@ public class WorldGen {
 
             roomx = rnd.nextInt(avgRoomSizeX) + marginSizeX;
             roomy = rnd.nextInt(avgRoomSizeY) + marginSizeY;
-            for (int i = 1 + rnd.nextInt(4); i < roomx - rnd.nextInt(3) + 1; i++) {
-                for (int j = 1 + rnd.nextInt(2); j < roomy - rnd.nextInt(2) + 1; j++) {
+            for (int i = 1 + rnd.nextInt(4); i < roomx - rnd.nextInt(2) + 1; i++) {
+                for (int j = 1 + rnd.nextInt(4); j < roomy - rnd.nextInt(2) + 1; j++) {
                     {
                         /* WALLS
                          if (i == 0 || j == 0 || i == roomx || j == roomy) {
@@ -106,9 +106,20 @@ public class WorldGen {
         caveIn();
         caveIn();
         caveIn();
-
+        caveOut();
+        caveOut();
+        caveOut();   
+        caveOut();
         buildCorridors(cellList);
 
+        caveOut();
+        caveOut();
+        caveOut();        
+        caveOut();
+        caveOut();
+        caveOut();   
+        caveOut();
+       
     }
 
     public Coordinate[] getTargets(ArrayList<Cell> r) {
@@ -183,8 +194,8 @@ public class WorldGen {
 
         }
     }
-
-    public void caveIn() {
+    
+        public void caveIn() {
         int caveinCounter = 0;
         Random caver = new Random();
         while (caveinCounter < 200) {
@@ -202,6 +213,30 @@ public class WorldGen {
                     caveinCounter++;
                 } if (world[rx - 1][ry - 1].getType() == 0) {
                     world[rx - 1][ry - 1].setType(2);
+                    caveinCounter++;
+                }
+            }
+        }
+    }
+
+    public void caveOut() {
+        int caveinCounter = 0;
+        Random caver = new Random();
+        while (caveinCounter < 400) {
+            int rx = caver.nextInt(x - 4) + 2;
+            int ry = caver.nextInt(y - 4) + 2;
+            if (world[rx][ry].getType() == 0) {
+                if (world[rx+1][ry].getType() == 2) {
+                    world[rx+1][ry].setType(0);
+                    caveinCounter++;
+                } if (world[rx-1][ry].getType() == 2) {
+                    world[rx-1][ry].setType(0);
+                    caveinCounter++;
+                } if (world[rx + 1][ry + 1].getType() == 2) {
+                    world[rx + 1][ry + 1].setType(0);
+                    caveinCounter++;
+                } if (world[rx - 1][ry - 1].getType() == 2) {
+                    world[rx - 1][ry - 1].setType(0);
                     caveinCounter++;
                 }
             }

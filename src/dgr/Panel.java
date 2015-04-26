@@ -11,6 +11,7 @@ import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -18,11 +19,11 @@ import javax.swing.JScrollPane;
 
 public class Panel extends JPanel {
 
-    Player player = new Player(this, 10, 10);
     WorldGen world;
     int xSize = 300;
     int ySize = 300;
-    int scale = 10;
+    Player player;
+    int scale = 20;
     BufferedImage map;
     int offsetMaxX = (xSize - getWidth());
     int offsetMaxY = (ySize - getHeight());
@@ -30,6 +31,7 @@ public class Panel extends JPanel {
     int offsetMinY = 0;
     int camX;
     int camY;
+    Entity[] enemies;
 
     public Panel() {
         addKeyListener(new KeyListener() {
@@ -53,13 +55,58 @@ public class Panel extends JPanel {
         world = new WorldGen(xSize, ySize);
         world.gen();
         drawMap();
+        player = getStartPlayer();
+        enemies = new Entity[500];
+        for(int i=0;i<enemies.length;i++){
+            enemies[i]=getStartEntity();
+        }
         setVisible(true);
 
     }
+    
+    public Entity getStartEntity() {
+        Entity pp = null;
+        Random rgen = new Random();
+        boolean success = false;
+        while (success == false) {
+
+            int startx = rgen.nextInt(xSize - 10) + 10;
+            int starty = rgen.nextInt(ySize - 10) + 10;
+
+            if (world.getWorld()[startx][starty].getType() == 0
+                    && world.getWorld()[startx - 1][starty].getType() == 0
+                    && world.getWorld()[startx + 1][starty].getType() == 0) {
+                pp = new Entity(this, startx, starty,player);
+                success = true;
+            }
+
+        }
+        return pp;
+    }
+
+    public Player getStartPlayer() {
+        Player pp = null;
+        Random rgen = new Random();
+        boolean success = false;
+        while (success == false) {
+
+            int startx = rgen.nextInt(xSize - 10) + 10;
+            int starty = rgen.nextInt(ySize - 10) + 10;
+
+            if (world.getWorld()[startx][starty].getType() == 0
+                    && world.getWorld()[startx - 1][starty].getType() == 0
+                    && world.getWorld()[startx + 1][starty].getType() == 0) {
+                pp = new Player(this, startx, starty);
+                success = true;
+            }
+
+        }
+        return pp;
+    }
 
     public void move() {
-        camX = (player.getX() - getWidth()/10 / 2);
-        camY = (player.getY() - getHeight()/10 / 2);
+        camX = (player.getX() - getWidth() / scale / 2);
+        camY = (player.getY() - getHeight() / scale / 2);
 
         if (camX > offsetMaxX) {
             camX = offsetMaxX;
@@ -72,6 +119,9 @@ public class Panel extends JPanel {
             camY = offsetMinY;
         }
         player.move();
+        for(Entity e : enemies){
+            e.move();
+        }
 
     }
 
@@ -145,14 +195,20 @@ public class Panel extends JPanel {
 
         AffineTransformOp op = new AffineTransformOp(tx,
                 AffineTransformOp.TYPE_BILINEAR);
-        
-        g2d.scale(10.0, 10.0);
+        double scaled = scale;
+        g2d.scale(scaled, scaled);
         g2d.translate(-camX, -camY);
-        
+
         g2d.drawImage(map, null, this);
         g2d.setColor(Color.red);
-        
+
         player.paint(g2d);
+        
+        g2d.setColor(Color.green);
+        for (Entity e : enemies){
+            e.paint(g2d);
+        }
+        
         g2d.translate(camX, camY);
     }
 }
