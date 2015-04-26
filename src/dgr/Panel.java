@@ -25,12 +25,13 @@ public class Panel extends JPanel {
     Player player;
     int scale = 20;
     BufferedImage map;
-    int offsetMaxX = (xSize - getWidth());
-    int offsetMaxY = (ySize - getHeight());
+    int offsetMaxX = (xSize * scale - getWidth() / scale);
+    int offsetMaxY = (ySize * scale - getHeight() / scale);
     int offsetMinX = 0;
     int offsetMinY = 0;
     int camX;
     int camY;
+    int hp = 1000;
     Entity[] enemies;
 
     public Panel() {
@@ -48,6 +49,9 @@ public class Panel extends JPanel {
             @Override
             public void keyPressed(KeyEvent e) {
                 player.keyPressed(e);
+
+                move();
+                repaint();
                 //weapon.keyPressed(e);
             }
         });
@@ -57,13 +61,17 @@ public class Panel extends JPanel {
         drawMap();
         player = getStartPlayer();
         enemies = new Entity[500];
-        for(int i=0;i<enemies.length;i++){
-            enemies[i]=getStartEntity();
+        for (int i = 0; i < enemies.length; i++) {
+            enemies[i] = getStartEntity();
         }
         setVisible(true);
-
     }
-    
+
+    public void initCam() {
+        moveCamera();
+        repaint();
+    }
+
     public Entity getStartEntity() {
         Entity pp = null;
         Random rgen = new Random();
@@ -76,7 +84,7 @@ public class Panel extends JPanel {
             if (world.getWorld()[startx][starty].getType() == 0
                     && world.getWorld()[startx - 1][starty].getType() == 0
                     && world.getWorld()[startx + 1][starty].getType() == 0) {
-                pp = new Entity(this, startx, starty,player);
+                pp = new Entity(this, startx, starty, player);
                 success = true;
             }
 
@@ -104,7 +112,7 @@ public class Panel extends JPanel {
         return pp;
     }
 
-    public void move() {
+    public void moveCamera() {
         camX = (player.getX() - getWidth() / scale / 2);
         camY = (player.getY() - getHeight() / scale / 2);
 
@@ -118,10 +126,38 @@ public class Panel extends JPanel {
         } else if (camY < offsetMinY) {
             camY = offsetMinY;
         }
+    }
+
+    public void move() {
         player.move();
-        for(Entity e : enemies){
-            e.move();
+        for (Entity e : enemies) {
+            if (e.getX() == player.getX() && e.getY() == player.getY()) {
+                hp -= 10;
+            }
+            int enemyrange = 5;
+            int ex = player.getX() - e.getX();
+            int ey = player.getY() - e.getY();
+            if (ex > 0) {
+                if (ex < enemyrange) {
+                    e.move();
+                }
+            } else if (ex < 0) {
+                if (ex < -enemyrange) {
+                    e.move();
+                }
+            }
+            if (ey > 0) {
+                if (ey < enemyrange) {
+                    e.move();
+                }
+            } else if (ey < 0) {
+                if (ey < -enemyrange) {
+                    e.move();
+                }
+            }
+
         }
+        moveCamera();
 
     }
 
@@ -148,46 +184,13 @@ public class Panel extends JPanel {
         g.dispose();
     }
 
-    public String printRow(Tile[] t) {
-        String res = "";
-        for (Tile tt : t) {
-            switch (tt.getType()) {
-                case 0:
-                    res = res + " . ";
-                    break;
-                case 2:
-                    res = res + " # ";
-                    break;
-                default:
-                    break;
-            }
-        }
-        res = res + "<br>";
-        return res;
-    }
-
-    public void testWorld() {
-        int counter = 0;
-        String mappy = "";
-        for (Tile[] t : world.getWorld()) {
-            mappy = mappy + printRow(t);
-        }
-        mappy = "<html>" + mappy + "</html>";
-        JLabel jl = new JLabel();
-        Font f = new Font("Monospaced", Font.BOLD, 12);
-        jl.setFont(f);
-        jl.setText(mappy);
-        add(jl);
-
-    }
-
     @Override
     public void paintComponent(Graphics g) {
 
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
+                RenderingHints.VALUE_ANTIALIAS_OFF);
         ;
 
         AffineTransform tx = new AffineTransform();
@@ -203,12 +206,16 @@ public class Panel extends JPanel {
         g2d.setColor(Color.red);
 
         player.paint(g2d);
-        
+
         g2d.setColor(Color.green);
-        for (Entity e : enemies){
+        for (Entity e : enemies) {
             e.paint(g2d);
         }
-        
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Verdana", Font.BOLD, 1));;
+        g2d.drawString("H: " + hp, camX + 1, camY + 2);
+
         g2d.translate(camX, camY);
+
     }
 }

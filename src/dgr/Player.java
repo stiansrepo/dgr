@@ -16,34 +16,35 @@ public class Player {
     int xc;
     int yc;
 
-
     public Player(Panel panel, int x, int y) {
         this.x = x;
         this.y = y;
         this.panel = panel;
-        
+        xc = panel.world.getWorld()[x][y].getX();
+        yc = panel.world.getWorld()[x][y].getY();
     }
 
     public void move() {
 
         if (panel.world.getWorld()[x + xa][y].getType() == 0) {
             x = x + xa;
-            xc=panel.world.getWorld()[x + xa][y].getX();
-            yc=panel.world.getWorld()[x + xa][y].getY();
+            xc = panel.world.getWorld()[x + xa][y].getX();
+            yc = panel.world.getWorld()[x + xa][y].getY();
         }
 
-        if (panel.world.getWorld()[x][y+ya].getType() == 0) {
+        if (panel.world.getWorld()[x][y + ya].getType() == 0) {
             y = y + ya;
-            xc=panel.world.getWorld()[x][y+ya].getX();
-            yc=panel.world.getWorld()[x][y+ya].getY();
+            xc = panel.world.getWorld()[x][y + ya].getX();
+            yc = panel.world.getWorld()[x][y + ya].getY();
         }
 
     }
-    
-    public int getX(){
+
+    public int getX() {
         return xc;
     }
-    public int getY(){
+
+    public int getY() {
         return yc;
     }
 

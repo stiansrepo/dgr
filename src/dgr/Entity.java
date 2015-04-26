@@ -27,11 +27,11 @@ public class Entity {
     }
 
     public int getX() {
-        return xc;
+        return x;
     }
 
     public int getY() {
-        return yc;
+        return y;
     }
 
     public void move() {/*

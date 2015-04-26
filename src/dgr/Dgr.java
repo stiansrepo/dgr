@@ -8,7 +8,7 @@ import javax.swing.JScrollPane;
 
 public class Dgr extends JFrame {
 
-    private Panel p = new Panel();
+    private Panel p;
 
     public static void main(String[] args) throws InterruptedException {
         Dgr d = new Dgr();
@@ -20,8 +20,9 @@ public class Dgr extends JFrame {
     }
 
     public void setGame() throws InterruptedException {
-
+        p = new Panel();
         p.setSize(600, 600);
+        p.initCam();
         setSize(600, 600);
         //p.setPreferredSize(new Dimension(p.xSize*p.scale,p.xSize*p.scale));
         add(p);
@@ -38,7 +39,7 @@ public class Dgr extends JFrame {
 //            p.repaint();
 //            Thread.sleep(20);
 //        }
-        runGame();
+        //runGame(); (for realtime rendering)
     }
 
     public void runGame() {
@@ -56,7 +57,6 @@ public class Dgr extends JFrame {
             deltaF += (currentTime - initialTime) / timeF;
             initialTime = currentTime;
             if (deltaU >= 1) {
-                p.move();
                 ticks++;
                 deltaU--;
             }
