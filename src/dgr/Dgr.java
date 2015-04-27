@@ -2,6 +2,12 @@ package dgr;
 
 // @author laptopng34
 import java.awt.Dimension;
+import java.awt.Frame;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+import java.io.IOException;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -10,7 +16,7 @@ public class Dgr extends JFrame {
 
     private Panel p;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, IOException {
         Dgr d = new Dgr();
         d.setGame();
     }
@@ -19,27 +25,26 @@ public class Dgr extends JFrame {
 
     }
 
-    public void setGame() throws InterruptedException {
+    public void setGame() throws InterruptedException, IOException {
+
         p = new Panel();
-        p.setSize(600, 600);
-        p.initCam();
-        setSize(600, 600);
-        //p.setPreferredSize(new Dimension(p.xSize*p.scale,p.xSize*p.scale));
+        Dimension size = new Dimension(800, 800);
+        p.setPreferredSize(size);
+        setSize(size);
+        setLayout(new GridLayout(1, 1));
+
         add(p);
-
+        p.setSize(getWidth(), getHeight());
+        p.initCam();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        //JScrollPane scrPane = new JScrollPane(p);
-        //p.testWorld();
-        //d.add(scrPane);
-        //d.setExtendedState(MAXIMIZED_BOTH);
+        centerFrame();
         setVisible(true);
-//        while(true){
-//            p.move();
-//            p.repaint();
-//            Thread.sleep(20);
-//        }
-        //runGame(); (for realtime rendering)
+        p.drawMapToFile();
+    }
+    
+    public void centerFrame(){
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        this.setLocation(dim.width / 2 - this.getSize().width / 2, dim.height / 2 - this.getSize().height / 2);
     }
 
     public void runGame() {

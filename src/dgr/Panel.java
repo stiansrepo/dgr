@@ -6,33 +6,40 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Random;
+import javax.imageio.ImageIO;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-public class Panel extends JPanel {
+public class Panel extends JPanel implements ComponentListener {
 
     WorldGen world;
-    int xSize = 300;
-    int ySize = 300;
+    int xSize = 150;
+    int ySize = 150;
     Player player;
-    int scale = 20;
+    int scale = 15;
     BufferedImage map;
-    int offsetMaxX = (xSize * scale - getWidth() / scale);
-    int offsetMaxY = (ySize * scale - getHeight() / scale);
+    int offsetMaxX = (xSize - getWidth());
+    int offsetMaxY = (ySize - getHeight());
     int offsetMinX = 0;
     int offsetMinY = 0;
     int camX;
     int camY;
     int hp = 1000;
-    Entity[] enemies;
+    ArrayList<Entity> enemies;
 
     public Panel() {
         addKeyListener(new KeyListener() {
@@ -55,21 +62,46 @@ public class Panel extends JPanel {
                 //weapon.keyPressed(e);
             }
         });
+        this.addComponentListener(this);
         setFocusable(true);
         world = new WorldGen(xSize, ySize);
         world.gen();
         drawMap();
         player = getStartPlayer();
-        enemies = new Entity[500];
-        for (int i = 0; i < enemies.length; i++) {
-            enemies[i] = getStartEntity();
+        enemies = new ArrayList<>();
+
+        for (int i = 0; i < 20; i++) {
+            enemies.add(getStartEntity());
         }
+
         setVisible(true);
     }
 
+    public void drawMapToFile() throws IOException {
+        File outputfile = new File("image.jpg");
+        ImageIO.write(map, "jpg", outputfile);
+    }
+
     public void initCam() {
+        offsetMaxX = xSize - (getWidth() / scale);
+        offsetMaxY = ySize - (getHeight() / scale);
         moveCamera();
         repaint();
+    }
+
+    public void componentResized(ComponentEvent e) {
+        initCam();
+    }
+
+    public void componentHidden(ComponentEvent e) {
+
+    }
+
+    public void componentMoved(ComponentEvent e) {
+    }
+
+    public void componentShown(ComponentEvent e) {
+        moveCamera();
     }
 
     public Entity getStartEntity() {
@@ -130,33 +162,24 @@ public class Panel extends JPanel {
 
     public void move() {
         player.move();
-        for (Entity e : enemies) {
+        ArrayList<Entity> rem = new ArrayList<>();
+        Iterator<Entity> eit = enemies.iterator();
+        while (eit.hasNext()) {
+            Entity e = eit.next();
+            e.move();
             if (e.getX() == player.getX() && e.getY() == player.getY()) {
                 hp -= 10;
-            }
-            int enemyrange = 5;
-            int ex = player.getX() - e.getX();
-            int ey = player.getY() - e.getY();
-            if (ex > 0) {
-                if (ex < enemyrange) {
-                    e.move();
-                }
-            } else if (ex < 0) {
-                if (ex < -enemyrange) {
-                    e.move();
-                }
-            }
-            if (ey > 0) {
-                if (ey < enemyrange) {
-                    e.move();
-                }
-            } else if (ey < 0) {
-                if (ey < -enemyrange) {
-                    e.move();
-                }
-            }
+                e.setHp(e.getHp() - 10);
 
+                if (e.getHp() <= 0) {
+                    rem.add(e);
+                }
+            }
         }
+        for (Entity e : rem) {
+            enemies.remove(e);
+        }
+
         moveCamera();
 
     }
@@ -164,16 +187,24 @@ public class Panel extends JPanel {
     public void drawMap() {
         map = new BufferedImage(xSize, ySize, BufferedImage.TYPE_INT_ARGB);
         Graphics g = map.createGraphics();
-
+        Font f = new Font("Monospace",Font.PLAIN,513);
         for (int i = 0; i < xSize; i++) {
             for (int j = 0; j < ySize; j++) {
                 switch (world.getWorld()[i][j].getType()) {
                     case 0:
-                        g.setColor(Color.GRAY);
+                        g.setColor(Color.LIGHT_GRAY);
+                        g.fillRect(i, j, 1, 1);
+                        break;
+                    case 1:
+                        g.setColor(Color.DARK_GRAY);
                         g.fillRect(i, j, 1, 1);
                         break;
                     case 2:
                         g.setColor(Color.BLACK);
+                        g.fillRect(i, j, 1, 1);
+                        break;
+                    case 3:
+                        g.setColor(Color.GRAY);
                         g.fillRect(i, j, 1, 1);
                         break;
                     default:
@@ -203,19 +234,20 @@ public class Panel extends JPanel {
         g2d.translate(-camX, -camY);
 
         g2d.drawImage(map, null, this);
-        g2d.setColor(Color.red);
+        g2d.setColor(new Color(195,125,95));
 
         player.paint(g2d);
 
-        g2d.setColor(Color.green);
-        for (Entity e : enemies) {
+        g2d.setColor(new Color(115,35,0));
+        Iterator<Entity> eit = enemies.iterator();
+        while (eit.hasNext()) {
+            Entity e = eit.next();
             e.paint(g2d);
         }
         g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Verdana", Font.BOLD, 1));;
+        g2d.setFont(new Font("Verdana", Font.BOLD, 2));;
         g2d.drawString("H: " + hp, camX + 1, camY + 2);
 
         g2d.translate(camX, camY);
-
     }
 }

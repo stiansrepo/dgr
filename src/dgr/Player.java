@@ -26,13 +26,29 @@ public class Player {
 
     public void move() {
 
-        if (panel.world.getWorld()[x + xa][y].getType() == 0) {
+        boolean legalX = false;
+        boolean legalY = false;
+        int[] legaltype = new int[]{0, 1, 3};
+        for (int i : legaltype) {
+            if (panel.world.getWorld()[x][y + ya].getType() == i) {
+                legalY = true;
+            }
+        }
+        for (int i : legaltype) {
+            if (panel.world.getWorld()[x + xa][y].getType() == i) {
+                legalX = true;
+            }
+        }
+        
+        
+
+        if (legalX) {
             x = x + xa;
             xc = panel.world.getWorld()[x + xa][y].getX();
             yc = panel.world.getWorld()[x + xa][y].getY();
         }
 
-        if (panel.world.getWorld()[x][y + ya].getType() == 0) {
+        if (legalY) {
             y = y + ya;
             xc = panel.world.getWorld()[x][y + ya].getX();
             yc = panel.world.getWorld()[x][y + ya].getY();
