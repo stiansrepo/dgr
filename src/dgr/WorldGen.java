@@ -23,7 +23,11 @@ public class WorldGen {
     private int caveinamt = 1;
     private int cavecorridoramt = 70;
     private int caveoutamt = 70;
-    //ArrayList<Coordinate> path = new ArrayList();
+    Path path;
+    SortedList openlist = new SortedList();
+    ArrayList closedlist = new ArrayList<>();
+    int[][] heuristicMap = new int[x][y];
+    Node[][] nodes = new Node[x][y];
 
     public WorldGen(int x, int y) {
         this.x = x;
@@ -107,6 +111,122 @@ public class WorldGen {
         }
         return cellList;
     }
+    
+    protected Node getFirstInOpen() {
+        return (Node) openlist.first();
+    }
+
+    protected void addToOpen(Node node) {
+        openlist.add(node);
+    }
+
+    protected boolean inOpenList(Node node) {
+        return openlist.contains(node);
+    }
+
+    protected void removeFromOpen(Node node) {
+        openlist.remove(node);
+    }
+
+    protected void addToClosed(Node node) {
+        closedlist.add(node);
+    }
+
+    protected boolean inClosedList(Node node) {
+        return closedlist.contains(node);
+    }
+
+    protected void removeFromClosed(Node node) {
+        closedlist.remove(node);
+    }
+
+    protected boolean isValidLocation(int sx, int sy, int x, int y) {
+        boolean invalid = (x < 0) || (y < 0) || (x >= x) || (y >= x);
+
+        if ((!invalid) && ((sx != x) || (sy != y))) {
+            invalid = (heuristicMap[x][y] == 9999);
+        }
+
+        return !invalid;
+    }
+
+
+    public Path findPathInt(int sx, int sy, int tox, int toy) {
+        boolean checking = true;
+        int movecost = 10;
+        int movediagcost = 14;
+
+        nodes[sx][sy].cost = 0;
+        nodes[sx][sy].depth = 0;
+        closedlist.clear();
+        openlist.clear();
+        openlist.add(nodes[sx][sy]);
+        nodes[tox][toy].parent = null;
+
+        int maxSearchDistance = 100;
+        int maxDepth = 0;
+        while ((openlist.size() != 0) && (maxDepth < maxSearchDistance)) {
+            Node current = getFirstInOpen();
+            if (current == nodes[tox][toy]) {
+                break;
+            }
+            removeFromOpen(current);
+            addToClosed(current);
+
+            for (int x = -1; x < 2; x++) {
+                for (int y = -1; y < 2; y++) {
+
+                    if ((x == 0) && (y == 0)) {
+                        continue;
+                    }
+                    int mcost = 10;
+                    if ((x == -1 || x == 1) && (y == 1 || y == -1)) {
+                        mcost = 14;
+                    }
+
+                    int xp = x + current.x;
+                    int yp = y + current.y;
+
+                    if (isValidLocation(sx, sy, xp, yp)) {
+
+                        int nextStepCost = current.cost + heuristicMap[xp][yp] + mcost;
+                        Node neighbour = nodes[xp][yp];
+
+                        if (nextStepCost < neighbour.cost) {
+                            if (inOpenList(neighbour)) {
+                                removeFromOpen(neighbour);
+                            }
+                            if (inClosedList(neighbour)) {
+                                removeFromClosed(neighbour);
+                            }
+                        }
+                        if (!inOpenList(neighbour) && !(inClosedList(neighbour))) {
+                            neighbour.cost = nextStepCost;
+                            neighbour.h = current.h + heuristicMap[tox][toy];
+                            maxDepth = Math.max(maxDepth, neighbour.setParent(current));
+                            addToOpen(neighbour);
+                        }
+
+                    }
+                }
+
+            }
+
+        }
+        if (nodes[tox][toy].parent == null) {
+            return null;
+        }
+        Path path = new Path();
+        Node target = nodes[tox][toy];
+        while (target != nodes[sx][sy]) {
+            path.prependStep(target.x, target.y);
+            target = target.parent;
+        }
+        path.prependStep(sx, sy);
+
+        // thats it, we have our path 
+        return path;
+    }
 
     public void genRoomWorld() {
         world = new Tile[x][y];
@@ -168,16 +288,16 @@ public class WorldGen {
         cellularAutomata();
         cellularAutomata();
         cellularAutomata();
-        
+
         cellularAutomataTwo();
-        
+
         cellularAutomataTwo();
 
         int threshold = 0;
 
         while (threshold < 1000) {
 
-            threshold=flood(world, new boolean[x][y], rnd.nextInt(x), rnd.nextInt(y), 0, 2);
+            threshold = flood(world, new boolean[x][y], rnd.nextInt(x), rnd.nextInt(y), 0, 2);
         }
         world = tmpWorld;
     }
