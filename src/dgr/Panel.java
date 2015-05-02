@@ -27,8 +27,8 @@ import javax.swing.JScrollPane;
 public class Panel extends JPanel implements ComponentListener {
 
     WorldGen world;
-    int xSize = 150;
-    int ySize = 150;
+    int xSize = 300;
+    int ySize = 300;
     Player player;
     int scale = 15;
     BufferedImage map;
@@ -70,7 +70,7 @@ public class Panel extends JPanel implements ComponentListener {
         player = getStartPlayer();
         enemies = new ArrayList<>();
 
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 2; i++) {
             enemies.add(getStartEntity());
         }
 

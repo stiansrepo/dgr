@@ -12,10 +12,10 @@ public class WorldGen {
     Tile[][] world;
     Tile[][] tmpWorld;
     Random rnd = new Random();
-    private int avgRoomSizeX = 16;
-    private int avgRoomSizeY = 20;
-    private int marginSizeX = 4;
-    private int marginSizeY = 4;
+    private int avgRoomSizeX = 80;
+    private int avgRoomSizeY = 84;
+    private int marginSizeX = 8;
+    private int marginSizeY = 8;
     private int cellX;
     private int cellY;
     private int cellamt;
@@ -32,7 +32,7 @@ public class WorldGen {
     public WorldGen(int x, int y) {
         this.x = x;
         this.y = y;
-        cellSize = x / 5;
+        cellSize = x / 10;
         cellX = cellSize;
         cellY = cellSize;
         cellamt = (x * y) / (cellX * cellY);
@@ -262,8 +262,8 @@ public class WorldGen {
         world = new Tile[x][y];
         for (int i = 0; i < x; i++) {
             for (int j = 0; j < y; j++) {
-                int rtype = 0;
-                if (rnd.nextInt(100) < 50) {
+                int rtype = 2;
+                if (rnd.nextInt(100) < 100) {
                     rtype = 2;
                 }
                 world[i][j] = new Tile(i, j, rtype);
@@ -285,21 +285,16 @@ public class WorldGen {
          cellularAutomata();
          cellularAutomata();
          */
-        cellularAutomata();
-        cellularAutomata();
-        cellularAutomata();
+        buildTunnelsHeuristic(getTargets(generateCellListFromMap(world)));
+        /*
+         int threshold = 0;
 
-        cellularAutomataTwo();
+         while (threshold < 1000) {
 
-        cellularAutomataTwo();
-
-        int threshold = 0;
-
-        while (threshold < 1000) {
-
-            threshold = flood(world, new boolean[x][y], rnd.nextInt(x), rnd.nextInt(y), 0, 2);
-        }
-        world = tmpWorld;
+         threshold=flood(world, new boolean[x][y], rnd.nextInt(x), rnd.nextInt(y), 0, 2);
+         }
+         world = tmpWorld;
+         */
     }
 
     public void cellularAutomata() {
@@ -480,11 +475,11 @@ public class WorldGen {
         int targetcounter = 0;
         while (marked < cellamt) {
 
-            int randomX = rgen.nextInt(cellX);
-            int randomY = rgen.nextInt(cellY);
+            int randomX = 1 + rgen.nextInt(cellX - 1);
+            int randomY = 1 + rgen.nextInt(cellY - 1);
             int randomCell = rgen.nextInt(cellamt);
             if (!r.get(randomCell).isConnected()) {
-                if ((r.get(randomCell).getRoom()[randomX][randomY].getType() == 0)) {
+                if ((r.get(randomCell).getRoom()[randomX][randomY].getType() == 2)) {
                     if (randomX < cellX && randomY < cellY) {
                         {
                             //restargets[targetcounter] = new Coordinate(r.get(randomCell).getRoom()[randomX][randomY].getX(), r.get(randomCell).getRoom()[randomX][randomY].getY());
@@ -505,6 +500,25 @@ public class WorldGen {
     public void buildCorridors(ArrayList<Cell> r) {
         Coordinate[] targetsextra = getTargets(r);
         buildTunnels(targetsextra);
+    }
+
+    public int[][] buildHeuristic(int targetx, int targety) {
+        int[][] heuristicMap = new int[x][y];
+        for (int i = 0;i < x; i++) {
+            for (int j = 0; j < y; j++) {
+                int distancex;
+                int distancey;
+                distancex = Math.abs((targetx - i));
+                distancey = Math.abs((targety - j));
+                if (world[i][j].getType() == 2) {
+                    heuristicMap[i][j] = distancex + distancey;
+
+                } else {
+                    heuristicMap[i][j] = 999999;
+                }
+            }
+        }
+        return heuristicMap;
     }
 
     public Tile[][] getWorld() {
@@ -671,6 +685,92 @@ public class WorldGen {
             }
 
         }
+    }
+
+    public void buildTunnelsHeuristic(Coordinate[] targets) {
+
+        for (int i = 0; i < targets.length - 1; i++) {
+
+            int[][] heur = buildHeuristic(targets[i].getX(), targets[i].getY());
+            for (Coordinate c : findPathInt(targets[i].getX(), targets[i].getY(), targets[i + 1].getX(), targets[i + 1].getY(), heur)) {
+                world[c.getX()][c.getY()].setType(0);
+            }
+
+        }
+    }
+
+    public ArrayList<Coordinate> findPathInt(int i, int j, int tox, int toy, int[][] heurmap) {
+        boolean checking = true;
+        int cheapestnode = 9999;
+        int cheapestx = 0;
+        int cheapesty = 0;
+        ArrayList<Coordinate> ac = new ArrayList<>(1000000);
+
+        while (checking) {
+            // start på en node
+            // sjekk de 8 rundt
+            // velg den billigste
+            // start fra denne
+            // sjekk de 8 rundt
+            // ...til man finder endepunktet
+            if (!((i < 2 || i > x - 2) || (j < 2) || (j > y - 2))) {
+                if ((heurmap[i][j + 1] < cheapestnode) || (!(ac.contains(new Coordinate(i, j + 1))))) {
+
+                    cheapestnode = heurmap[i][j + 1];
+                    cheapestx = i;
+                    cheapesty = j + 1;
+                }
+                if ((heurmap[i][j - 1] < cheapestnode) || !(ac.contains(new Coordinate(i, j - 1)))) {
+                    cheapestnode = heurmap[i][j - 1];
+                    cheapestx = i;
+                    cheapesty = j - 1;
+                }
+                if ((heurmap[i + 1][j] < cheapestnode) || !(ac.contains(new Coordinate(i + 1, j)))) {
+                    cheapestnode = heurmap[i + 1][j];
+                    cheapestx = i + 1;
+                    cheapesty = j;
+                }
+                if ((heurmap[i + 1][j + 1] < cheapestnode) || !(ac.contains(new Coordinate(i + 1, j + 1)))) {
+                    cheapestnode = heurmap[i + 1][j + 1];
+                    cheapestx = i + 1;
+                    cheapesty = j + 1;
+                }
+                if ((heurmap[i + 1][j - 1] < cheapestnode) || !(ac.contains(new Coordinate(i + 1, j - 1)))) {
+                    cheapestnode = heurmap[i + 1][j - 1];
+                    cheapestx = i + 1;
+                    cheapesty = j - 1;
+                }
+                if ((heurmap[i - 1][j] < cheapestnode) || !(ac.contains(new Coordinate(i - 1, j)))) {
+                    cheapestnode = heurmap[i - 1][j];
+                    cheapestx = i - 1;
+                    cheapesty = j;
+                }
+                if ((heurmap[i - 1][j + 1] < cheapestnode) || !(ac.contains(new Coordinate(i - 1, j + 1)))) {
+                    cheapestnode = heurmap[i - 1][j + 1];
+                    cheapestx = i - 1;
+                    cheapesty = j + 1;
+                }
+                if ((heurmap[i - 1][j - 1] < cheapestnode) || !(ac.contains(new Coordinate(i - 1, j - 1)))) {
+                    cheapestnode = heurmap[i - 1][j - 1];
+                    cheapestx = i - 1;
+                    cheapesty = j - 1;
+                }
+
+                if (cheapestx == tox && cheapesty == toy) {
+                    checking = false;
+                }
+
+                if (!ac.contains(new Coordinate(cheapestx, cheapesty))) {
+                    ac.add(new Coordinate(cheapestx, cheapesty));
+
+                }
+
+                i = cheapestx;
+                j = cheapesty;
+
+            }
+        }
+        return ac;
     }
 
     public void caveCorridor() {
